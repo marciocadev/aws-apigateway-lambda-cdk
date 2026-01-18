@@ -2,6 +2,7 @@ import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
+import { Tracer } from '@aws-lambda-powertools/tracer';
 import 'source-map-support/register';
 
 const logger = new Logger({
@@ -11,6 +12,10 @@ const logger = new Logger({
 
 const dynamoClient = new DynamoDBClient({});
 const TABLE_NAME = process.env.TABLE_NAME!;
+
+const tracer = new Tracer({ serviceName: 'createOrder' });
+// Instrument the AWS SDK client
+const client = tracer.captureAWSv3Client(dynamoClient);
 
 function generateOrderId(): number {
   // Gera um ID único baseado em timestamp + número aleatório
@@ -34,7 +39,7 @@ export const handler = async (
 
     // Prepara o item para inserção no DynamoDB (em formato JavaScript)
     const item = {
-      ClientID: order.clientId,
+      ClientId: order.clientId,
       OrderId: orderId,
       Items: order.items,
       PaymentMethod: order.paymentMethod,
@@ -46,7 +51,7 @@ export const handler = async (
     const marshalledItem = marshall(item);
 
     // Insere no DynamoDB
-    await dynamoClient.send(new PutItemCommand({
+    await client.send(new PutItemCommand({
       TableName: TABLE_NAME,
       Item: marshalledItem,
     }));

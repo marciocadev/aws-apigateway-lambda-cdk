@@ -1,6 +1,6 @@
 import { AccessLogFormat, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, LogGroupLogDestination, MethodLoggingLevel, Model, RequestValidator, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib/core';
@@ -14,7 +14,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
     const table = new Table(this, "DynamoDB", {
       tableName: "apigateway-lambda-db",
       partitionKey: {
-        name: "ClientID",
+        name: "ClientId",
         type: AttributeType.NUMBER,
       },
       sortKey: {
@@ -29,6 +29,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       handler: "handler",
       entry: join(__dirname, "functions", "createOrder.ts"),
       runtime: Runtime.NODEJS_LATEST,
+      tracing: Tracing.ACTIVE,
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });
@@ -41,6 +42,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       handler: "handler",
       entry: join(__dirname, "functions", "updateInstallments.ts"),
       runtime: Runtime.NODEJS_LATEST,
+      tracing: Tracing.ACTIVE,
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });
@@ -53,6 +55,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       handler: "handler",
       entry: join(__dirname, "functions", "getOrdersByClient.ts"),
       runtime: Runtime.NODEJS_LATEST,
+      tracing: Tracing.ACTIVE,
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });

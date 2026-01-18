@@ -1,4 +1,4 @@
-@api_id = cr1t4cvf1d
+@api_id = c60updr4l0
 @url = https://{{api_id}}.execute-api.us-east-1.amazonaws.com/prod/
 
 POST {{url}} HTTP/1.1
@@ -61,11 +61,11 @@ content-type: application/json
 
 ###
 
-PATCH {{url}}/orders/134/1768748763162962 HTTP/1.1
+PATCH {{url}}/orders/134/1768759864173119 HTTP/1.1
 content-type: application/json
 
 {
-  "installments": 3
+  "installments": 8
 }
 
 ###
@@ -79,3 +79,11 @@ GET {{url}}/orders/134?paymentMethod=credit_card HTTP/1.1
 ###
 
 GET {{url}}/orders/134?paymentMethod=pix HTTP/1.1
+
+###
+
+GET {{url}}/orders/143?paymentMethod=credit_card HTTP/1.1
+
+###
+
+GET {{url}}/orders/143?paymentMethod=pix HTTP/1.1

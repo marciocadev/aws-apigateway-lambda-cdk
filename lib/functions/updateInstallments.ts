@@ -3,6 +3,7 @@ import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
 import 'source-map-support/register';
+import { Tracer } from '@aws-lambda-powertools/tracer';
 
 const logger = new Logger({
   serviceName: 'update-installments',
@@ -11,6 +12,10 @@ const logger = new Logger({
 
 const dynamoClient = new DynamoDBClient({});
 const TABLE_NAME = process.env.TABLE_NAME!;
+
+const tracer = new Tracer({ serviceName: 'updateInstallments' });
+// Instrument the AWS SDK client
+const client = tracer.captureAWSv3Client(dynamoClient);
 
 export const handler = async (
   event: APIGatewayEvent,
@@ -46,7 +51,7 @@ export const handler = async (
 
     // Prepara a chave do item
     const key = marshall({
-      ClientID: parseInt(clientId),
+      ClientId: parseInt(clientId),
       OrderId: parseInt(orderId),
     });
 
@@ -58,7 +63,7 @@ export const handler = async (
     });
 
     // Atualiza o item no DynamoDB
-    await dynamoClient.send(new UpdateItemCommand({
+    await client.send(new UpdateItemCommand({
       TableName: TABLE_NAME,
       Key: key,
       UpdateExpression: updateExpression,

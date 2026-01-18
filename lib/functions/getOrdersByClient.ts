@@ -2,6 +2,7 @@ import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Logger } from '@aws-lambda-powertools/logger';
+import { Tracer } from '@aws-lambda-powertools/tracer';
 import 'source-map-support/register';
 
 const logger = new Logger({
@@ -11,6 +12,10 @@ const logger = new Logger({
 
 const dynamoClient = new DynamoDBClient({});
 const TABLE_NAME = process.env.TABLE_NAME!;
+
+const tracer = new Tracer({ serviceName: 'getOrdersByClient' });
+// Instrument the AWS SDK client
+const client = tracer.captureAWSv3Client(dynamoClient);
 
 // Valores válidos para paymentMethod (validação básica - enum validation requer Lambda Authorizer no API Gateway)
 const VALID_PAYMENT_METHODS = ["credit_card", "debit_card", "pix"] as const;
@@ -74,7 +79,7 @@ export const handler = async (
     });
 
     // Prepara a chave de partição para a query
-    const keyConditionExpression = 'ClientID = :clientId';
+    const keyConditionExpression = 'ClientId = :clientId';
     const expressionAttributeValues: Record<string, any> = {
       ':clientId': clientIdNumber,
     };
@@ -87,7 +92,7 @@ export const handler = async (
     }
 
     // Busca as ordens do cliente no DynamoDB (com ou sem filtro)
-    const result = await dynamoClient.send(new QueryCommand({
+    const result = await client.send(new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: keyConditionExpression,
       ...(filterExpression && { FilterExpression: filterExpression }),
