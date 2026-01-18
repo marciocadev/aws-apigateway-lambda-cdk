@@ -1,4 +1,4 @@
-@api_id = f5oa9ul0di
+@api_id = cr1t4cvf1d
 @url = https://{{api_id}}.execute-api.us-east-1.amazonaws.com/prod/
 
 POST {{url}} HTTP/1.1
@@ -46,7 +46,22 @@ content-type: application/json
 
 ###
 
-PATCH {{url}}/orders/134/1768747457327403 HTTP/1.1
+POST {{url}} HTTP/1.1
+content-type: application/json
+
+{
+  "clientId": 143,
+  "items": [
+    { "productId": 27, "quantity": 52 },
+    { "productId": 58, "quantity": 10 }
+  ],
+  "paymentMethod": "cash",
+  "installments": 12
+}
+
+###
+
+PATCH {{url}}/orders/134/1768748763162962 HTTP/1.1
 content-type: application/json
 
 {
