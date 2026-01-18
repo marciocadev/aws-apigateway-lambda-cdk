@@ -22,11 +22,26 @@ content-type: application/json
 {
   "clientId": 134,
   "items": [
-    { "productId": 17, "quantity": 5 },
-    { "productId": 18, "quantity": 1 }
+    { "productId": 13, "quantity": 2 },
+    { "productId": 12, "quantity": 2 }
   ],
-  "paymentMethod": "cash",
-  "installments": 3
+  "paymentMethod": "pix",
+  "installments": 1
+}
+
+###
+
+POST {{url}} HTTP/1.1
+content-type: application/json
+
+{
+  "clientId": 143,
+  "items": [
+    { "productId": 27, "quantity": 52 },
+    { "productId": 58, "quantity": 10 }
+  ],
+  "paymentMethod": "credit_card",
+  "installments": 12
 }
 
 ###
