@@ -32,6 +32,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });
+    createOrder.logGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
     const createOrderIntegration = new LambdaIntegration(createOrder);
     table.grantWriteData(createOrder);
 
@@ -43,6 +44,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });
+    updateInstallments.logGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
     const updateInstallmentsIntegration = new LambdaIntegration(updateInstallments);
     table.grantWriteData(updateInstallments);
 
@@ -54,6 +56,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
       environment: { TABLE_NAME: table.tableName },
       bundling: { minify: true, sourceMap: true }
     });
+    getOrdersByClient.logGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
     const getOrdersByClientIntegration = new LambdaIntegration(getOrdersByClient);
     table.grantReadData(getOrdersByClient);
 
