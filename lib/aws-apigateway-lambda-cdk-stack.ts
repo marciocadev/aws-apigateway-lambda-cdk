@@ -49,32 +49,40 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
     });
 
     // Request Validator para validar body
-    const requestValidator = new RequestValidator(this, "RequestValidator", {
+    const createOrderValidator = new RequestValidator(this, "CreateOrderValidator", {
       restApi,
-      requestValidatorName: "BodyValidator",
+      requestValidatorName: "CreateOrderValidator",
       validateRequestBody: true,
       validateRequestParameters: false,
     });
 
-    // Request Validator para validar query parameters (e opcionalmente body)
-    const queryParameterValidator = new RequestValidator(this, "QueryParameterValidator", {
+    // Request Validator para validar query parameters
+    const getOrderByClientValidator = new RequestValidator(this, "GetOrderByClientValidator", {
       restApi,
-      requestValidatorName: "QueryParameterValidator",
+      requestValidatorName: "GetOrderByClientValidator",
       validateRequestBody: false,
       validateRequestParameters: true,
     });
 
-    this.createOrder(table, restApi, requestValidator);
+    // Request Validator para validar query parameters e body
+    const updateInstallmentsValidator = new RequestValidator(this, "UpdateInstallmentsValidator", {
+      restApi,
+      requestValidatorName: "UpdateInstallmentsValidator",
+      validateRequestBody: true,
+      validateRequestParameters: true,
+    });
+
+    this.createOrder(table, restApi, createOrderValidator);
 
     // Rotas relacionadas a ordens
     const ordersResource = restApi.root.addResource("orders");
     const clientOrdersResource = ordersResource.addResource("{clientId}");
 
-    this.getOrdersByClient(table, queryParameterValidator, clientOrdersResource);
-    this.updateInstallments(table, restApi, requestValidator, clientOrdersResource);
+    this.getOrdersByClient(table, getOrderByClientValidator, clientOrdersResource);
+    this.updateInstallments(table, restApi, updateInstallmentsValidator, clientOrdersResource);
   }
 
-  private updateInstallments(table: Table, restApi: RestApi, requestValidator: RequestValidator, clientOrdersResource: Resource) {
+  private updateInstallments(table: Table, restApi: RestApi, updateInstallmentsValidator: RequestValidator, clientOrdersResource: Resource) {
     const updateInstallments = new NodejsFunction(this, "UpdateInstallments", {
       functionName: "update-installments-apigateway-lambda-cdk",
       handler: "handler",
@@ -110,14 +118,18 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
     // PATCH /orders/{clientId}/{orderId} - Atualiza installments de um pedido específico
     const orderResource = clientOrdersResource.addResource("{orderId}");
     orderResource.addMethod("PATCH", updateInstallmentsIntegration, {
-      requestValidator: requestValidator,
+      requestValidator: updateInstallmentsValidator,
+      requestParameters: {
+        'method.request.path.clientId': true,
+        'method.request.path.orderId': true,
+      },
       requestModels: {
         "application/json": updateInstallmentsModel,
       },
     });
   }
 
-  private getOrdersByClient(table: Table, queryParameterValidator: RequestValidator, clientOrdersResource: Resource) {
+  private getOrdersByClient(table: Table, getOrderByClientValidator: RequestValidator, clientOrdersResource: Resource) {
     const getOrdersByClient = new NodejsFunction(this, "GetOrdersByClient", {
       functionName: "get-orders-by-client-apigateway-lambda-cdk",
       handler: "handler",
@@ -133,14 +145,14 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
 
     // GET /orders/{clientId} - Lista todas as ordens de um cliente (aceita query parameter ?paymentMethod=xxx para filtrar)
     clientOrdersResource.addMethod("GET", getOrdersByClientIntegration, {
-      requestValidator: queryParameterValidator,
+      requestValidator: getOrderByClientValidator,
       requestParameters: {
         "method.request.querystring.paymentMethod": false, // false = opcional
       },
     });
   }
 
-  private createOrder(table: Table, restApi: RestApi, requestValidator: RequestValidator) {
+  private createOrder(table: Table, restApi: RestApi, createOrderValidator: RequestValidator) {
     const createOrder = new NodejsFunction(this, "CreateOrder", {
       functionName: "create-order-apigateway-lambda-cdk",
       handler: "handler",
@@ -198,7 +210,7 @@ export class AwsApigatewayLambdaCdkStack extends Stack {
     });
 
     restApi.root.addMethod("POST", createOrderIntegration, {
-      requestValidator: requestValidator,
+      requestValidator: createOrderValidator,
       requestModels: {
         "application/json": createOrderModel,
       },
